@@ -1,0 +1,298 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <title>Reactive Document Test</title>
+	<meta name="viewport" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width">
+	<meta name="description" content="D3 + Tangle for reactive documents">
+
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="static/style.css">
+</head>
+    
+<script src="http://d3js.org/d3.v4.min.js"></script>
+    
+<script type="text/javascript" src="static/Tangle.js"></script>
+<script type="text/javascript" src="static/TangleKit/mootools.js"></script>
+<script type="text/javascript" src="static/TangleKit/sprintf.js"></script>
+<script type="text/javascript" src="static/TangleKit/BVTouchable.js"></script>
+<script type="text/javascript" src="static/TangleKit/TangleKit.js"></script>
+
+<link rel="stylesheet" href="static/TangleKit/TangleKit.css" type="text/css">
+
+<script src="static/action-potentials.js"></script>
+    
+<body onload="setUpTangle();">
+    
+    <div>
+    <div class="imgWrap">
+    <img src="static/herg_results.png" style="width:300px;padding-top:20px;padding-right:20px;"/>
+    <p>In combination, we found that ceftriaxone and lansoprazole block the hERG channel responsible for prolonging the QT interval on the electrocardiogram.
+    <br><br>
+    We used a computational model of the human ventricular myocyte <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pubmed/15345532">(ref)</a> to simulate the action potential for the hERG block we observed for ceftriaxone, lansoprazole, and the combination from our laboratory experiments. We ran the model for a ventricular action potential paced at 1 Hz with baseline conditions and the current blocks observed in the electrophysiology experiments<!-- 10% or 55% block of hERG current (chosen using the current block observed in the electrophysiology experiments)-->. We evaluated the action potential duration at 70% of repolarization (APD70).</p>
+    </div>
+    
+    <p id="apmodel">
+        <!-- We used the hERG current blocks observed in the electrophysiology experiments as input to the computational model. -->We observed a block of <i>10%</i> for the combination of 1 μM lansoprazole/ 100 μM ceftriaxone and <i>55%</i> for 10 μM lansoprazole/ 100 μM ceftriaxone. For <span data-var="block" class="TKAdjustableNumber" data-min="5" data-max="100" data-step="5">% block</span><span data-var="combination"></span>, the action potential prolongation was <b data-var="prolongation">ms</b>.
+        <br><br>
+        Adjust the percent block by <span data-var="interactText"></span> and dragging to see the changes in the model and results.
+    </p>
+    <br>
+    <div id="plot"></div>
+    
+    </div>
+    
+</body>
+    
+<script type="text/javascript">
+    function getAPD70(block) {
+        var IKr_cond = 100-block;
+        var apsKey = "IKr"+(IKr_cond/100).toFixed(2);
+        return aps[apsKey].apd70;
+    }
+    
+    function setUpTangle() {
+        var element = document.getElementById("apmodel");
+
+        var tangle = new Tangle(element, {
+            initialize: function () {
+                this.block = 55;
+                this.prolongation = getAPD70(this.block);
+                this.interactText = window.innerWidth >= 768 ? "clicking" : "tapping";
+            },
+            update: function () {
+                this.prolongation = getAPD70(this.block);
+                
+                switch (this.block) {
+                    case 5:
+                        this.combination = " (1 μM lansoprazole and 10 μM ceftriaxone)";
+                        break;
+                    case 10:
+                        this.combination = " (1 μM lansoprazole and 100 μM ceftriaxone)";
+                        break;
+                    case 40:
+                        this.combination = " (10 μM lansoprazole and 0.1 μM ceftriaxone)";
+                        break;
+                    case 45:
+                        this.combination = " (10 μM lansoprazole and 1 μM ceftriaxone)";
+                        break;
+                    case 50:
+                        this.combination = " (10 μM lansoprazole and 50 μM ceftriaxone)";
+                        break;
+                    case 55:
+                        this.combination = " (10 μM lansoprazole and 100 μM ceftriaxone)";
+                        break;
+                    default:
+                        this.combination = "";
+                        break;
+                }
+                updatePlot( ((100-this.block)/100) );
+            }
+        });
+    }
+    
+</script>
+
+
+<script type="text/javascript">
+    var default_width = 630,
+        default_height = 350,
+        svg_aspect_ratio = default_width/default_height,
+        svg_width = window.innerWidth >= default_width ? default_width: window.innerWidth-20,
+        svg_height = svg_width/svg_aspect_ratio;
+    
+    var margin = {top: 0, right: 30, bottom: 75, left: 75},
+        width = svg_width - margin.left - margin.right,
+        height = svg_height - margin.top - margin.bottom;
+    
+    var svg = d3.select("#plot").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom),
+            
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")"),
+
+        padding = window.innerWidth >= default_width ? 100: 70;
+    
+    const [min, max] = d3.extent(aps["IKr1.00"].ap);
+    
+    var x = d3.scaleLinear()
+            .domain([-10, 500])
+            .range([0, width]);
+    
+    var y = d3.scaleLinear()
+            .domain([min, max])
+            .range([height, 0]);    
+    
+    // Add dashed line for 0 mV
+    var horizLine = d3.line().x(x).y(y(-0.25));
+    g.append("path")
+        .datum([-10,500])
+        .attr("class","zero-line")
+        .attr("stroke", "gray")
+        .attr("stroke-width", 1.5)
+        .style("stroke-dasharray", ("3, 3"))
+        .attr("d", horizLine);
+    //////        
+    
+    var line = d3.line()
+                .x(function(d,i) { return x( i-10 ); })
+                .y(y);
+    
+    var legendXPos = 380;
+    var legendFontSize = window.innerWidth >= default_width ? "16px": "12px";
+    var labelFontSize = window.innerWidth >= default_width ? "14.5px": "12px";
+    var legendColors = ['black', 'red'];
+    
+    function updatePlot(new_block) {
+        new_datum = aps["IKr"+new_block.toFixed(2)].ap;
+        
+        var line_data = [aps["IKr1.00"].ap, new_datum];
+        
+        // Legend
+        var legendData = ['Wildtype', (100*(1-new_block)).toFixed(0)+'% block'];
+
+        var legend = g.selectAll(".legend").data(legendData);
+
+        legend.exit().remove();
+
+        legend.transition().attr("transform", "translate(" + x(legendXPos) + "," + y(y.domain()[1]-2) + ")");
+
+        var legendEnter = legend.enter().append("g")
+                    .attr("class", "legend")
+                    .attr("height", 100)
+                    .attr("width", 100)
+                    .attr("transform", "translate(" + x(legendXPos) + "," + y(y.domain()[1]-2) + ")")
+
+        legendEnter.append("rect");
+        legendEnter.append("text");
+
+        var legendRect = g.selectAll(".legend").select("rect")
+                            .attr("x", 0)
+                            .attr("y", function(d, i) {return i * 20;} )
+                            .attr("width", 10)
+                            .attr("height", 10)
+                            .attr("opacity", 0.7)
+                            .style("fill", function (d, i) { return legendColors[i]; });
+
+        var legendText = g.selectAll(".legend").select("text")
+                            .attr("x", 15)//width - 135)
+                            .attr("y", function (d, i) { return i * 20 + 10;})
+                            .attr("font-size", legendFontSize)
+                            .text(function (d) { return d;});
+        ///////        
+        
+        // Lines
+        var lines = g.selectAll(".line")
+                 .data(line_data)
+        
+        lines.exit().remove();
+
+        lines.enter().append("path")
+                  .attr("fill", "none")
+                  .attr("stroke", function(d,i) { return legendColors[i]; })
+                  .attr("stroke-width", 3)
+                  .attr("class", "line")
+                  .attr("d", line);
+        
+        lines.transition().duration(700)
+                .attr("stroke", function(d,i) { return legendColors[i]; })
+                .attr("d", line);
+    }
+    
+    updatePlot( ((100-55)/100) );
+    
+    
+    // Add the x Axis
+    var xAxis = d3.axisBottom().scale(x);
+    g.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .style("font-family","serif")
+        .call(xAxis);
+
+    // Add the y Axis
+    var yAxis = d3.axisLeft().scale(y);
+    g.append("g")
+        .attr("class", "y axis")
+        .style("font-family","serif")
+        .call(yAxis);
+
+    // now add titles to the axes
+    g.append("text")
+        .attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
+        .attr("transform", "translate(-"+ (padding/2) +","+(height/2)+")rotate(-90)")  // text is drawn off the screen top left, move down and out and rotate
+        .attr("class", "ylabel")
+        .attr("font-size", labelFontSize)
+        .text("Membrane potential (mV)");
+
+    g.append("text")
+        .attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
+        .attr("transform", "translate("+ (width/2) +","+(height+(padding/3) + 20)+")")  // center below axis
+        .attr("class", "xlabel")
+        .attr("font-size", labelFontSize)
+        .text("Time (milliseconds)");
+    
+    
+    function resize() {
+        if (window.innerWidth < default_width) {
+            new_svg_width = window.innerWidth-20,
+            new_svg_height = new_svg_width/svg_aspect_ratio;
+            padding = 70;
+            labelFontSize = "12px";
+            legendFontSize = "12px";
+        } else {
+            new_svg_width = default_width,
+            new_svg_height = default_height;
+            padding = 100;
+            labelFontSize = "14.5px";
+            legendFontSize = "16px";
+        }
+        
+        new_width = new_svg_width - margin.left - margin.right,
+        new_height = new_svg_height - margin.top - margin.bottom;
+        
+        // Resize svg and set new x and y scale
+        svg.attr("width", new_svg_width)
+           .attr("height", new_svg_height);
+        x.range([0, new_width]);
+        y.range([new_height, 0]);
+        
+        // Update line locations
+        g.selectAll(".line").transition().attr("d", line);
+        
+        // Update horizontal line location
+        horizLine = d3.line().x(x).y(y(-0.25));
+        g.select(".zero-line").transition()
+          .attr("d", horizLine);
+        
+        // Update the y axis
+        g.select(".y.axis").transition().call(yAxis);
+
+        // Update the x axis
+        g.select(".x.axis").transition()
+          .attr("transform", "translate(0," + new_height + ")")
+          .call(xAxis);
+        
+        // Move x-label
+        g.selectAll(".xlabel")
+          .attr("transform", "translate("+ (new_width/2) +","+(new_height+(padding/3) + 20)+")")
+          .attr("font-size", labelFontSize);
+        
+        // Move y-label
+        g.selectAll(".ylabel")
+          .attr("transform", "translate(-"+ (padding/2) +","+(new_height/2)+")rotate(-90)")
+          .attr("font-size", labelFontSize);
+        
+        // Move legend
+        g.selectAll(".legend").transition()
+          .attr("transform", "translate(" + x(legendXPos) + "," + y(y.domain()[1]-2) + ")")
+          .select("text").attr("font-size", legendFontSize);
+        
+    }
+    
+    window.addEventListener("resize", resize);
+</script>
+
+</html>
+
+
