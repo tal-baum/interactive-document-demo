@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="static/style.css">
 </head>
     
-<script src="http://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
     
 <script type="text/javascript" src="static/Tangle.js"></script>
 <script type="text/javascript" src="static/TangleKit/mootools.js"></script>
@@ -25,18 +25,18 @@
 <body onload="setUpTangle();">
     
     <div>
-    <div class="imgWrap">
-    <img src="static/herg_results.png" style="width:300px;padding-top:20px;padding-right:20px;"/>
-    <p>In combination, we found that ceftriaxone and lansoprazole block the hERG channel responsible for prolonging the QT interval on the electrocardiogram.
-    <br><br>
-    We used a computational model of the human ventricular myocyte <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pubmed/15345532">(ref)</a> to simulate the action potential for the hERG block we observed for ceftriaxone, lansoprazole, and the combination from our laboratory experiments. We ran the model for a ventricular action potential paced at 1 Hz with baseline conditions and the current blocks observed in the electrophysiology experiments<!-- 10% or 55% block of hERG current (chosen using the current block observed in the electrophysiology experiments)-->. We evaluated the action potential duration at 70% of repolarization (APD70).</p>
-    </div>
-    
-    <p id="apmodel">
-        <!-- We used the hERG current blocks observed in the electrophysiology experiments as input to the computational model. -->We observed a block of <i>10%</i> for the combination of 1 μM lansoprazole/ 100 μM ceftriaxone and <i>55%</i> for 10 μM lansoprazole/ 100 μM ceftriaxone. For <span data-var="block" class="TKAdjustableNumber" data-min="5" data-max="100" data-step="5">% block</span><span data-var="combination"></span>, the action potential prolongation was <b data-var="prolongation">ms</b>.
+        <div class="imgWrap">
+        <img src="static/herg_results.png" style="width:300px;padding-top:20px;padding-right:20px;"/>
+        <p>In combination, we found that ceftriaxone and lansoprazole block the hERG channel responsible for prolonging the QT interval on the electrocardiogram.
         <br><br>
-        Adjust the percent block by <span data-var="interactText"></span> and dragging to see the changes in the model and results.
-    </p>
+        
+        We used a computational model of the human ventricular myocyte <a target="_blank" href="https://www.ncbi.nlm.nih.gov/pubmed/15345532">(ref)</a> to simulate the action potential for the hERG block we observed for ceftriaxone, lansoprazole, and the combination from our laboratory experiments. We ran the model for a ventricular action potential paced at 1 Hz with baseline conditions and the current blocks observed in the electrophysiology experiments. We evaluated the action potential duration at 70% of repolarization (APD70).</p>
+        </div>
+        
+        <p id="apmodel">We observed a block of <i>10%</i> for the combination of 1 μM lansoprazole/ 100 μM ceftriaxone and <i>55%</i> for 10 μM lansoprazole/ 100 μM ceftriaxone. For <span data-var="block" class="TKAdjustableNumber" data-min="5" data-max="100" data-step="5">% block</span><span data-var="combination"></span>, the action potential prolongation was <b data-var="prolongation">ms</b>.
+        <br><br>
+        
+        Adjust the percent block by <span data-var="interactText"></span> and dragging to see the changes in the model and results.</p>
     <br>
     <div id="plot"></div>
     
